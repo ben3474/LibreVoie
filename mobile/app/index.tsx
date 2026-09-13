@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_DEFAULT, UrlTile } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { computeRoute, searchPlaces } from '../src/api';
 import { addObstacle } from '../src/obstacles';
@@ -10,9 +10,10 @@ import { PROFILE_LABELS, PROFILES } from '../src/profiles';
 import { AccessibilitySettings, Coordinate, RouteResult, SearchResult } from '../src/types';
 
 const LA_ROCHE = {latitude: 46.0667, longitude: 6.3125};
+const OSM_HTML = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>html,body,#map{height:100%;margin:0} .leaflet-control-attribution{font-size:9px}</style></head><body><div id="map"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>const map=L.map('map').setView([46.0667,6.3125],15);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);let routeLayer=null;window.setRoute=(coords)=>{if(routeLayer)map.removeLayer(routeLayer);if(coords?.length){routeLayer=L.polyline(coords,{color:'#147D64',weight:7}).addTo(map);map.fitBounds(routeLayer.getBounds(),{padding:[40,40]});}};</script></body></html>`;
 
 export default function Home() {
-  const map = useRef<MapView>(null);
+  const map = useRef<WebView>(null);
   const [position, setPosition] = useState<Coordinate>(LA_ROCHE);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -30,7 +31,6 @@ export default function Home() {
     const current = await Location.getCurrentPositionAsync({accuracy: Location.Accuracy.Balanced});
     const coordinate = {latitude: current.coords.latitude, longitude: current.coords.longitude};
     setPosition(coordinate);
-    map.current?.animateToRegion({...coordinate, latitudeDelta: .015, longitudeDelta: .015});
   }
 
   async function runSearch() {
@@ -46,7 +46,7 @@ export default function Home() {
       setBusy(true); setResults([]);
       const next = await computeRoute(position, target.coordinate, routeSettings);
       setRoute(next);
-      requestAnimationFrame(() => map.current?.fitToCoordinates(next.geometry, {edgePadding: {top: 160, right: 40, bottom: 260, left: 40}, animated: true}));
+      map.current?.injectJavaScript(`window.setRoute(${JSON.stringify(next.geometry.map(p => [p.latitude, p.longitude]))}); true;`);
     } catch { Alert.alert('Itinéraire indisponible', "Aucun chemin adapté n'a pu être calculé."); }
     finally { setBusy(false); }
   }
@@ -59,11 +59,7 @@ export default function Home() {
   const confidence = route?.confidence === 'high' ? 'Confiance élevée' : route?.confidence === 'medium' ? 'Confiance moyenne' : 'Données insuffisantes';
 
   return <SafeAreaView style={styles.safe}>
-    <MapView ref={map} style={StyleSheet.absoluteFill} provider={PROVIDER_DEFAULT} mapType="none" initialRegion={{...LA_ROCHE, latitudeDelta: .025, longitudeDelta: .025}} showsUserLocation showsMyLocationButton={false}>
-      <UrlTile urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png" maximumZ={19} flipY={false} />
-      {destination && <Marker coordinate={destination.coordinate} title={destination.label} pinColor="#5A2D82" />}
-      {route && <Polyline coordinates={route.geometry} strokeColor="#147D64" strokeWidth={7} />}
-    </MapView>
+    <WebView ref={map} style={StyleSheet.absoluteFill} originWhitelist={['*']} source={{html: OSM_HTML}} javaScriptEnabled domStorageEnabled />
     <Text style={styles.attribution}>© OpenStreetMap contributors</Text>
 
     <View style={styles.topCard}>
