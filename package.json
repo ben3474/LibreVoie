@@ -1,0 +1,13 @@
+{
+  "name": "librevoie",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["mobile", "server"],
+  "scripts": {
+    "dev:mobile": "npm --workspace mobile start",
+    "dev:server": "npm --workspace server run dev",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  }
+}
+
