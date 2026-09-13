@@ -7,7 +7,6 @@
     "orientation": "portrait",
     "scheme": "librevoie",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
     "android": {
       "package": "fr.larochesurforon.librevoie",
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
