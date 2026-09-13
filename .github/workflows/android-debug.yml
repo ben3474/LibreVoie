@@ -1,4 +1,4 @@
-name: Android debug APK
+name: Android standalone APK
 
 on:
   workflow_dispatch:
@@ -35,11 +35,13 @@ jobs:
         run: npm install
       - name: Generate Android project
         run: npx expo prebuild --platform android --non-interactive
-      - name: Build debug APK
+      - name: Build standalone APK
         shell: bash
+        env:
+          NODE_ENV: production
         run: |
           set -o pipefail
-          ./android/gradlew -p android assembleDebug --stacktrace 2>&1 | tee gradle-build.log
+          ./android/gradlew -p android assembleRelease --stacktrace 2>&1 | tee gradle-build.log
       - name: Publish failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -50,6 +52,6 @@ jobs:
       - name: Publish APK
         uses: actions/upload-artifact@v4
         with:
-          name: LibreVoie-debug
-          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          name: LibreVoie-standalone
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
