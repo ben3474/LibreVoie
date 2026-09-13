@@ -1,6 +1,6 @@
 import { AccessibilitySettings, Coordinate, RouteResult, SearchResult } from './types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8787';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://librevoie.onrender.com';
 
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, init);
@@ -21,4 +21,3 @@ export async function computeRoute(start: Coordinate, end: Coordinate, settings:
     body: JSON.stringify({start, end, settings}),
   });
 }
-
