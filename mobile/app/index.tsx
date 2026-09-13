@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
+import Geolocation from '@react-native-community/geolocation';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, PermissionsAndroid, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { computeRoute, searchPlaces } from '../src/api';
@@ -26,11 +26,25 @@ export default function Home() {
   useEffect(() => { void locate(); }, []);
 
   async function locate() {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (!permission.granted) return;
-    const current = await Location.getCurrentPositionAsync({accuracy: Location.Accuracy.Balanced});
-    const coordinate = {latitude: current.coords.latitude, longitude: current.coords.longitude};
-    setPosition(coordinate);
+    try {
+      if (Platform.OS === 'android') {
+        const permission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
+          title: 'Position',
+          message: 'LibreVoie utilise votre position pour calculer un itinéraire accessible.',
+          buttonPositive: 'Autoriser',
+          buttonNegative: 'Refuser',
+        });
+        if (permission !== PermissionsAndroid.RESULTS.GRANTED) return;
+      }
+      Geolocation.setRNConfiguration({skipPermissionRequests: true, locationProvider: 'android'});
+      Geolocation.getCurrentPosition(
+        current => setPosition({latitude: current.coords.latitude, longitude: current.coords.longitude}),
+        () => Alert.alert('Position indisponible', 'Activez la localisation puis réessayez.'),
+        {enableHighAccuracy: false, timeout: 15000, maximumAge: 30000},
+      );
+    } catch {
+      Alert.alert('Position indisponible', 'LibreVoie peut néanmoins être utilisé avec le centre-ville comme point de départ.');
+    }
   }
 
   async function runSearch() {

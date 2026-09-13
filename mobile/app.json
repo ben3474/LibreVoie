@@ -7,15 +7,13 @@
     "orientation": "portrait",
     "scheme": "librevoie",
     "userInterfaceStyle": "light",
+    "newArchEnabled": false,
     "android": {
       "package": "fr.larochesurforon.librevoie",
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
       "adaptiveIcon": {"backgroundColor": "#E9F5EF"}
     },
-    "plugins": [
-      "expo-router",
-      ["expo-location", {"locationWhenInUsePermission": "LibreVoie utilise votre position pour calculer et suivre votre itinéraire accessible."}]
-    ],
+    "plugins": ["expo-router"],
     "extra": {"router": {"origin": false}, "eas": {"projectId": "ba344001-4fad-4a46-9b2b-55b2a20f7711"}}
   }
 }
