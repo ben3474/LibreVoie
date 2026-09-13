@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: librevoie-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ORS_API_KEY
+        sync: false
